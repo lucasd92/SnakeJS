@@ -22,10 +22,10 @@ Your higher scores will be stored locally.
 
 # Scenes:
 
-![Alt text](./img/main-scene.png?raw=true "Main scene")
+![Alt text](./img/main-scene.PNG?raw=true "Main scene")
 
 ![Alt text](./img/game-scene.png?raw=true "Game scene")
 
-![Alt text](./img/scoreboard-scene.png?raw=true "Score scene")
+![Alt text](./img/scoreboard-scene.PNG?raw=true "Score scene")
 
 
