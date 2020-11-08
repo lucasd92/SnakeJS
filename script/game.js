@@ -27,6 +27,12 @@
     var aEat = new Audio();
     var aDie = new Audio();
 
+    // statics
+    var lastUpdate = 0,
+    FPS = 0,
+    frames = 0,
+    acumDelta = 0;
+
 
     // definition, maybe const?
     var KEY_ENTER = 13,
@@ -125,6 +131,8 @@
         ctx.fillStyle = '#fff';
         // Draw score
         ctx.fillText('Score: ' + score, 0, 10);
+        // Draw FPS
+        ctx.fillText('FPS: ' + FPS, canvas.width - 50, 10);
         // Draw pause
         if (pause) {
             ctx.textAlign = 'center';
@@ -254,16 +262,32 @@
         }
 
         run();
-        repaint();
+        //repaint();
     } 
     // Call run @ 20fps?
-    function repaint() {
-        window.requestAnimationFrame(repaint);
-        paint(ctx);
-    }
+    // function repaint() {
+    //     window.requestAnimationFrame(repaint);
+    //     paint(ctx);
+    // }
     function run() {
-        setTimeout(run, 50);
+        window.requestAnimationFrame(run);
         act();
+        paint(ctx);
+        
+        // get time for statics calculation
+        var now = Date.now(),
+        deltaTime = (now - lastUpdate) / 1000;
+        if (deltaTime > 1) {
+            deltaTime = 0;
+        }
+        lastUpdate = now;
+        frames += 1;
+        acumDelta += deltaTime;
+        if (acumDelta > 1) {
+            FPS = frames;
+            frames = 0;
+            acumDelta -= 1;
+        }
     }
     // Init after load
     window.addEventListener('load', init, false);
