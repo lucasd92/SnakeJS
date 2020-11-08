@@ -198,7 +198,12 @@
             l = 0;
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, buffer.width, buffer.height);
-
+        //Draw body[0]
+        ctx.fillStyle = '#0f0';
+        for (i = 0, l = body.length; i < l; i += 1) {
+            //body[i].fill(ctx);
+            body[i].drawImage(ctx,iBody);
+        }
         // Draw food
         ctx.fillStyle = '#f00';
         food.drawImage(ctx,iFood);
@@ -207,12 +212,7 @@
         if((Date.now() > fruitTimer)){
             fruit.drawImage(ctx,iFruit);
         }
-        //Draw body[0]
-        ctx.fillStyle = '#0f0';
-        for (i = 0, l = body.length; i < l; i += 1) {
-            //body[i].fill(ctx);
-            body[i].drawImage(ctx,iBody);
-        }
+
         // Draw walls
         ctx.fillStyle = '#999';
         for (i = 0, l = wall.length; i < l; i += 1) {
@@ -364,6 +364,21 @@
         localStorage.highscores = highscores.join(',');
     }
 
+    function postScore(actualScore){
+        fetch(`https://jsonplaceholder.typicode.com/users/${userId}/posts`, {
+        method: 'POST',
+        body: JSON.stringify({
+            score: actualScore,
+            userId: userId,
+        }),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8',
+        },
+        })
+        .then((response) => response.json())
+        .then((json) => {console.log(json); console.log("Score sent successfully");})
+        .catch((error) => {console.log(error);console.log("Error trying to send the score");})
+    }
     // resize callback
     function resize(){
         canvas.width = window.innerWidth;
@@ -401,10 +416,10 @@
         fruit = new Rectangle(-10, -10, 10, 10);
 
         // Create walls
-        // wall.push(new Rectangle(100, 50, 10, 10));
-        // wall.push(new Rectangle(100, 100, 10, 10));
-        // wall.push(new Rectangle(200, 50, 10, 10));
-        // wall.push(new Rectangle(200, 100, 10, 10));
+        wall.push(new Rectangle(100, 50, 10, 10));
+        wall.push(new Rectangle(100, 100, 10, 10));
+        wall.push(new Rectangle(200, 50, 10, 10));
+        wall.push(new Rectangle(200, 100, 10, 10));
 
         // Load assets
         iBody.src = 'assets/body.png';
@@ -478,20 +493,5 @@
     // Aux funtion for random number generation
     function random(max) {
         return Math.floor(Math.random() * max);
-    }
-    function postScore(actualScore){
-        fetch(`https://jsonplaceholder.typicode.com/users/${userId}/posts?${actualScore}`, {
-        method: 'POST',
-        body: JSON.stringify({
-            score: actualScore,
-            userId: userId,
-        }),
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-        },
-        })
-        .then((response) => response.json())
-        .then((json) => {console.log(json); console.log("Score sent successfully");})
-        .catch((error) => {console.log(error);console.log("Error trying to send the score");})
     }
 }(window));
