@@ -16,6 +16,14 @@ var lastPress = null;
 var pause = true;
 var gameover = true;
 
+// images
+var iBody = new Image();
+var iFood = new Image();
+
+//Audio
+var aEat = new Audio();
+var aDie = new Audio();
+
 
 // definition, maybe const?
 var KEY_ENTER = 13,
@@ -66,14 +74,16 @@ function paint(ctx) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     //Draw body[0]
-    ctx.fillStyle = '#0f0';
+    //ctx.fillStyle = '#0f0';
     for (i = 0, l = body.length; i < l; i += 1) {
-        body[i].fill(ctx);
+        //body[i].fill(ctx);
+        ctx.drawImage(iBody, body[i].x, body[i].y);
     }
 
     // Draw food
-    ctx.fillStyle = '#f00';
-    food.fill(ctx);
+    //ctx.fillStyle = '#f00';
+    //food.fill(ctx);
+    ctx.drawImage(iFood, food.x, food.y);
 
     // Draw walls
     ctx.fillStyle = '#999';
@@ -161,6 +171,7 @@ function act(){
             food.x = random(canvas.width / 10 - 1) * 10;
             food.y = random(canvas.height / 10 - 1) * 10;
             body.push(new Rectangle(food.x, food.y, 10, 10));
+            aEat.play();
         }
 
         // Wall Intersects
@@ -172,6 +183,7 @@ function act(){
             if (body[0].intersects(wall[i])) {
                 pause = true;
                 gameover = true;
+                aDie.play();
             }
         }
     }
@@ -197,6 +209,12 @@ function init() {
     // wall.push(new Rectangle(100, 100, 10, 10));
     // wall.push(new Rectangle(200, 50, 10, 10));
     // wall.push(new Rectangle(200, 100, 10, 10));
+
+    // Load assets
+    iBody.src = 'assets/body.png';
+    iFood.src = 'assets/fruit.png';
+    aEat.src = 'assets/chomp.oga';
+    aDie.src = 'assets/dies.oga';
 
     run();
     repaint();
