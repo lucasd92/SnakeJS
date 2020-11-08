@@ -232,6 +232,15 @@
             lastPress = null;
         }
     }
+    // resize callback
+    function resize(){
+        var w = window.innerWidth / canvas.width;
+        var h = window.innerHeight / canvas.height;
+        var scale = Math.min(h, w);
+        canvas.style.width = (canvas.width * scale) + 'px';
+        canvas.style.height = (canvas.height * scale) + 'px';
+    }
+
     //Get Canvas and context then draw and take actions
     function init() {
         canvas = document.getElementById('canvas');
@@ -262,17 +271,17 @@
         }
 
         run();
-        //repaint();
+        repaint();
     } 
     // Call run @ 20fps?
-    // function repaint() {
-    //     window.requestAnimationFrame(repaint);
-    //     paint(ctx);
-    // }
-    function run() {
-        window.requestAnimationFrame(run);
-        act();
+    function repaint() {
+        window.requestAnimationFrame(repaint);
         paint(ctx);
+    }
+    function run() {
+        setTimeout(run, 50);
+        act();
+        //paint(ctx);
         
         // get time for statics calculation
         var now = Date.now(),
@@ -295,6 +304,8 @@
     document.addEventListener('keydown', function (evt) {
         lastPress = evt.which;
     }, false);
+    // Add listener to resize event
+    window.addEventListener('resize', resize, false);
 
     // For compatibility with older browsers
     window.requestAnimationFrame = (function () {
