@@ -12,6 +12,8 @@
     var body = [];
     // Food object
     var food = null;
+    var fruit = null;
+    var fruitTimer = 0;
     // wall array
     var wall = [];
     // Direction 0= UP, 1= right, 2= down, 3 = left
@@ -25,6 +27,7 @@
     // images
     var iBody = new Image();
     var iFood = new Image();
+    var iFruit = new Image();
 
     //Audio
     var aEat = new Audio();
@@ -136,7 +139,7 @@
             lastPress = null;
         }
     };
-    
+
     // Highscore Scene
     highscoresScene = new Scene();
 
@@ -180,6 +183,9 @@
         body[0].y = 40;
         food.x = random(buffer.width / 10 - 1) * 10;
         food.y = random(buffer.height / 10 - 1) * 10;
+        fruitTimer = Date.now() + 1000*(5 + random(15));
+        fruit.x = random(buffer.width / 10 - 1) * 10;
+        fruit.y = random(buffer.height / 10 - 1) * 10;
         gameover = false;
         body.length = 0;
         body.push(new Rectangle(40, 40, 10, 10));
@@ -210,8 +216,13 @@
 
         // Draw food
         ctx.fillStyle = '#f00';
-        //food.fill(ctx);
         food.drawImage(ctx,iFood);
+        // Draw fruit
+        ctx.fillStyle = '#ff0';
+        if((Date.now() > fruitTimer)){
+            fruit.drawImage(ctx,iFruit);
+        }
+        
 
         // Draw walls
         ctx.fillStyle = '#999';
@@ -300,7 +311,7 @@
                     aDie.play();
                 }
             }
-                // Food Intersects
+            // Food Intersects
             if (body[0].intersects(food)) {
                 score += 1;
                 food.x = random(buffer.width / 10 - 1) * 10;
@@ -308,19 +319,32 @@
                 body.push(new Rectangle(food.x, food.y, 10, 10));
                 aEat.play();
             }
-
+            // Fruit Intersects 
+            if ((body[0].intersects(fruit)) && (Date.now() > fruitTimer)) {
+                score += 1;
+                fruit.x = random(buffer.width / 10 - 1) * 10;
+                fruit.y = random(buffer.height / 10 - 1) * 10;
+                aEat.play();
+                fruitTimer = Date.now() + 1000*(5 + random(15));
+            }
             // Wall Intersects
             for (i = 0, l = wall.length; i < l; i += 1) {
                 if (food.intersects(wall[i])) {
                     food.x = random(buffer.width / 10 - 1) * 10;
                     food.y = random(buffer.height / 10 - 1) * 10;
-                } 
+                }
+                if (fruit.intersects(wall[i])) {
+                    fruit.x = random(buffer.width / 10 - 1) * 10;
+                    fruit.y = random(buffer.height / 10 - 1) * 10;
+                }  
                 if (body[0].intersects(wall[i])) {
                     pause = true;
                     gameover = true;
                     aDie.play();
                 }
             }
+        }else{
+            fruitTimer = Date.now() + 1000*(5 + random(15));
         }
         // Pause/Unpause
         if (lastPress === KEY_ENTER) {
@@ -374,6 +398,8 @@
         body.push(new Rectangle(40, 40, 10, 10));
         //food for the snake
         food = new Rectangle(80, 80, 10, 10);
+        //food for the snake
+        fruit = new Rectangle(-10, -10, 10, 10);
 
         // Create walls
         // wall.push(new Rectangle(100, 50, 10, 10));
@@ -384,6 +410,7 @@
         // Load assets
         iBody.src = 'assets/body.png';
         iFood.src = 'assets/fruit.png';
+        iFruit.src = 'assets/fruit2.png';
 
         if (canPlayOgg()) {
             aEat.src = 'assets/chomp.oga';
