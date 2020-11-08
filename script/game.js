@@ -3,7 +3,7 @@ var canvas = null,
 // game score
 var score = 0;
 // Player object
-var player = null;
+var body = new Array();
 // Food object
 var food = null;
 // wall array
@@ -52,20 +52,24 @@ function Rectangle(x, y, width, height) {
 function reset() {
     score = 0;
     dir = 1;
-    player.x = 40;
-    player.y = 40;
+    body[0].x = 40;
+    body[0].y = 40;
     food.x = random(canvas.width / 10 - 1) * 10;
     food.y = random(canvas.height / 10 - 1) * 10;
     gameover = false;
+    body.length = 0;
+    body.push(new Rectangle(40, 40, 10, 10));
 }
 // Draw in canvas
 function paint(ctx) {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    //Draw player
+    //Draw body[0]
     ctx.fillStyle = '#0f0';
-    player.fill(ctx);
+    for (i = 0, l = body.length; i < l; i += 1) {
+        body[i].fill(ctx);
+    }
 
     // Draw food
     ctx.fillStyle = '#f00';
@@ -114,36 +118,49 @@ function act(){
         }
         // Move Rect
         if (dir == 0) {
-            player.y -= 10;
+            body[0].y -= 10;
         }
         if (dir == 1) {
-            player.x += 10;
+            body[0].x += 10;
         }
         if (dir == 2) {
-            player.y += 10;
+            body[0].y += 10;
         }
         if (dir == 3) {
-            player.x -= 10;
+            body[0].x -= 10;
         }
         // Out Screen
-        if (player.x > canvas.width) {
-            player.x = 0;
+        if (body[0].x > canvas.width) {
+            body[0].x = 0;
         }
-        if (player.y > canvas.height) {
-            player.y = 0;
+        if (body[0].y > canvas.height) {
+            body[0].y = 0;
         }
-        if (player.x < 0) {
-            player.x = canvas.width;
+        if (body[0].x < 0) {
+            body[0].x = canvas.width;
         }
-        if (player.y < 0) {
-            player.y = canvas.height;
+        if (body[0].y < 0) {
+            body[0].y = canvas.height;
+        }
+        // Move Body
+        for (i = body.length - 1; i > 0; i -= 1) {
+            body[i].x = body[i - 1].x;
+            body[i].y = body[i - 1].y;
         }
 
+        // Body Intersects
+        for (i = 2, l = body.length; i < l; i += 1) {
+            if (body[0].intersects(body[i])) {
+                gameover = true;
+                pause = true;
+            }
+        }
             // Food Intersects
-        if (player.intersects(food)) {
+        if (body[0].intersects(food)) {
             score += 1;
             food.x = random(canvas.width / 10 - 1) * 10;
             food.y = random(canvas.height / 10 - 1) * 10;
+            body.push(new Rectangle(food.x, food.y, 10, 10));
         }
 
         // Wall Intersects
@@ -152,7 +169,7 @@ function act(){
                 food.x = random(canvas.width / 10 - 1) * 10;
                 food.y = random(canvas.height / 10 - 1) * 10;
             } 
-            if (player.intersects(wall[i])) {
+            if (body[0].intersects(wall[i])) {
                 pause = true;
                 gameover = true;
             }
@@ -170,15 +187,16 @@ function init() {
     ctx = canvas.getContext('2d');
 
     // Create player
-    player = new Rectangle(40, 40, 10, 10);
+    //player = new Rectangle(40, 40, 10, 10);
+    body.push(new Rectangle(40, 40, 10, 10));
     //food for the snake
     food = new Rectangle(80, 80, 10, 10);
 
     // Create walls
-    wall.push(new Rectangle(100, 50, 10, 10));
-    wall.push(new Rectangle(100, 100, 10, 10));
-    wall.push(new Rectangle(200, 50, 10, 10));
-    wall.push(new Rectangle(200, 100, 10, 10));
+    // wall.push(new Rectangle(100, 50, 10, 10));
+    // wall.push(new Rectangle(100, 100, 10, 10));
+    // wall.push(new Rectangle(200, 50, 10, 10));
+    // wall.push(new Rectangle(200, 100, 10, 10));
 
     run();
     repaint();
