@@ -47,6 +47,9 @@
     var mainScene = null,
         gameScene = null;
 
+    // local storage
+    var highscores = [],
+        posHighscore = 10;
 
     // definition, maybe const?
     var KEY_ENTER = 13,
@@ -114,8 +117,6 @@
         scenes[currentScene].load();
     }
 
-
-    
     // Main Scene
     mainScene = new Scene();
     mainScene.paint = function (ctx) {
@@ -129,6 +130,38 @@
         ctx.fillText('Press Enter', 150, 90);
     };
     mainScene.act = function () {
+        // Load next scene
+        if (lastPress === KEY_ENTER) {
+            loadScene(highscoresScene);
+            lastPress = null;
+        }
+    };
+    
+    // Highscore Scene
+    highscoresScene = new Scene();
+
+    highscoresScene.paint = function (ctx) {
+        var i = 0,
+        l = 0;
+        // Clean canvas
+        ctx.fillStyle = '#030';
+        ctx.fillRect(0, 0, buffer.width, buffer.height);
+        // Draw title
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText('HIGH SCORES', 150, 30);
+        // Draw high scores
+        ctx.textAlign = 'right';
+        for (i = 0, l = highscores.length; i < l; i += 1) {
+            if (i === posHighscore) {
+                ctx.fillText('*' + highscores[i], 180, 40 + i * 10);
+            } else {
+                ctx.fillText(highscores[i], 180, 40 + i * 10);
+            }
+        }
+    };
+
+    highscoresScene.act = function () {
         // Load next scene
         if (lastPress === KEY_ENTER) {
             loadScene(gameScene);
@@ -210,7 +243,9 @@
         if(!pause){
             // GameOver Reset
             if (gameover) {
-                loadScene(mainScene);
+                //loadScene(mainScene);
+                addHighscore(score);
+                loadScene(highscoresScene);
             }
             // Change Direction
             if (lastPress === KEY_UP && dir !== 2) {
@@ -293,6 +328,19 @@
             lastPress = null;
         }
     }
+
+    function addHighscore(score) {
+        posHighscore = 0;
+        while (highscores[posHighscore] > score && posHighscore < highscores.length) {
+            posHighscore += 1;
+        }
+        highscores.splice(posHighscore, 0, score);
+        if (highscores.length > 10) {
+            highscores.length = 10;
+        }
+        localStorage.highscores = highscores.join(',');
+    }
+
     // resize callback
     function resize(){
         canvas.width = window.innerWidth;
@@ -316,7 +364,11 @@
         bufferCtx = buffer.getContext('2d');
         buffer.width = 300;
         buffer.height = 150;
-
+        
+        // Load saved highscores
+        if (localStorage.highscores) {
+            highscores = localStorage.highscores.split(',');
+        }
         // Create player
         //player = new Rectangle(40, 40, 10, 10);
         body.push(new Rectangle(40, 40, 10, 10));
@@ -349,14 +401,13 @@
     function repaint() {
         window.requestAnimationFrame(repaint);
         // buffer swap
-        //paint(bufferCtx);        
+   
         if (scenes.length) {
             scenes[currentScene].paint(bufferCtx);
         }
         ctx.fillStyle = '#000';
         ctx.imageSmoothingEnabled = false;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        //ctx.drawImage(buffer, 0, 0, canvas.width, canvas.height);
         ctx.drawImage(buffer, bufferOffsetX, bufferOffsetY, buffer.width * bufferScale, buffer.height * bufferScale);
     }
     function run() {
