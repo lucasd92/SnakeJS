@@ -3,6 +3,9 @@
 
     var canvas = null,
         ctx = null;
+    // Dual buffer
+    var buffer = null,
+        bufferCtx = null;
     // game score
     var score = 0;
     // Player object
@@ -32,6 +35,10 @@
     FPS = 0,
     frames = 0,
     acumDelta = 0;
+
+    var bufferScale = 1,
+    bufferOffsetX = 0,
+    bufferOffsetY = 0;
 
 
     // definition, maybe const?
@@ -88,8 +95,8 @@
         dir = 1;
         body[0].x = 40;
         body[0].y = 40;
-        food.x = random(canvas.width / 10 - 1) * 10;
-        food.y = random(canvas.height / 10 - 1) * 10;
+        food.x = random(buffer.width / 10 - 1) * 10;
+        food.y = random(buffer.height / 10 - 1) * 10;
         gameover = false;
         body.length = 0;
         body.push(new Rectangle(40, 40, 10, 10));
@@ -106,8 +113,10 @@
 
     // Draw in canvas
     function paint(ctx) {
+        var i = 0,
+            l = 0;
         ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, buffer.width, buffer.height);
 
         //Draw body[0]
         ctx.fillStyle = '#0f0';
@@ -132,7 +141,7 @@
         // Draw score
         ctx.fillText('Score: ' + score, 0, 10);
         // Draw FPS
-        ctx.fillText('FPS: ' + FPS, canvas.width - 50, 10);
+        ctx.fillText('FPS: ' + FPS, buffer.width - 50, 10);
         // Draw pause
         if (pause) {
             ctx.textAlign = 'center';
@@ -146,22 +155,24 @@
     } 
     //Execute actions
     function act(){
+        var i = 0,
+            l = 0;
         if(!pause){
             // GameOver Reset
             if (gameover) {
                 reset();
             }
             // Change Direction
-            if (lastPress === KEY_UP) {
-                dir = 0;
+            if (lastPress === KEY_UP && dir !== 2) {
+             dir = 0;
             }
-            if (lastPress === KEY_RIGHT) {
+            if (lastPress === KEY_RIGHT && dir !== 3) {
                 dir = 1;
             }
-            if (lastPress === KEY_DOWN) {
+            if (lastPress === KEY_DOWN && dir !== 0) {
                 dir = 2;
             }
-            if (lastPress === KEY_LEFT) {
+            if (lastPress === KEY_LEFT && dir !== 1) {
                 dir = 3;
             }
             // Move Rect
@@ -178,17 +189,17 @@
                 body[0].x -= 10;
             }
             // Out Screen
-            if (body[0].x > canvas.width  - body[0].width) {
+            if (body[0].x > buffer.width  - body[0].width) {
                 body[0].x = 0;
             }
-            if (body[0].y > canvas.height - body[0].height) {
+            if (body[0].y > buffer.height - body[0].height) {
                 body[0].y = 0;
             }
             if (body[0].x < 0) {
-                body[0].x = canvas.width - body[0].width;
+                body[0].x = buffer.width - body[0].width;
             }
             if (body[0].y < 0) {
-                body[0].y = canvas.height - body[0].height;
+                body[0].y = buffer.height - body[0].height;
             }
             // Move Body
             for (i = body.length - 1; i > 0; i -= 1) {
@@ -207,8 +218,8 @@
                 // Food Intersects
             if (body[0].intersects(food)) {
                 score += 1;
-                food.x = random(canvas.width / 10 - 1) * 10;
-                food.y = random(canvas.height / 10 - 1) * 10;
+                food.x = random(buffer.width / 10 - 1) * 10;
+                food.y = random(buffer.height / 10 - 1) * 10;
                 body.push(new Rectangle(food.x, food.y, 10, 10));
                 aEat.play();
             }
@@ -216,8 +227,8 @@
             // Wall Intersects
             for (i = 0, l = wall.length; i < l; i += 1) {
                 if (food.intersects(wall[i])) {
-                    food.x = random(canvas.width / 10 - 1) * 10;
-                    food.y = random(canvas.height / 10 - 1) * 10;
+                    food.x = random(buffer.width / 10 - 1) * 10;
+                    food.y = random(buffer.height / 10 - 1) * 10;
                 } 
                 if (body[0].intersects(wall[i])) {
                     pause = true;
@@ -234,17 +245,27 @@
     }
     // resize callback
     function resize(){
-        var w = window.innerWidth / canvas.width;
-        var h = window.innerHeight / canvas.height;
-        var scale = Math.min(h, w);
-        canvas.style.width = (canvas.width * scale) + 'px';
-        canvas.style.height = (canvas.height * scale) + 'px';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var w = window.innerWidth / buffer.width;
+        var h = window.innerHeight / buffer.height;
+        bufferScale = Math.min(h, w);
+        bufferOffsetX = (canvas.width - (buffer.width * bufferScale)) / 2;
+        bufferOffsetY = (canvas.height - (buffer.height * bufferScale)) / 2;
     }
 
     //Get Canvas and context then draw and take actions
     function init() {
         canvas = document.getElementById('canvas');
         ctx = canvas.getContext('2d');
+        canvas.width = 600;
+        canvas.height = 300;
+
+        // Load buffer
+        buffer = document.createElement('canvas');
+        bufferCtx = buffer.getContext('2d');
+        buffer.width = 300;
+        buffer.height = 150;
 
         // Create player
         //player = new Rectangle(40, 40, 10, 10);
@@ -269,14 +290,21 @@
             aEat.src = 'assets/chomp.m4a';
             aDie.src = 'assets/dies.m4a';
         }
-
+        resize();
         run();
         repaint();
+
     } 
     // Call run @ 20fps?
     function repaint() {
         window.requestAnimationFrame(repaint);
-        paint(ctx);
+        // buffer swap
+        paint(bufferCtx);
+        ctx.fillStyle = '#000';
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        //ctx.drawImage(buffer, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(buffer, bufferOffsetX, bufferOffsetY, buffer.width * bufferScale, buffer.height * bufferScale);
     }
     function run() {
         setTimeout(run, 50);
