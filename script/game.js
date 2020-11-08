@@ -6,8 +6,13 @@
     // Dual buffer
     var buffer = null,
         bufferCtx = null;
+
+    var bufferScale = 1,
+        bufferOffsetX = 0,
+        bufferOffsetY = 0;
     // game score
-    var score = 0;
+    var score = 0,
+        userId = 2;
     // Player object
     var body = [];
     // Food object
@@ -35,13 +40,9 @@
 
     // statics
     var lastUpdate = 0,
-    FPS = 0,
-    frames = 0,
-    acumDelta = 0;
-
-    var bufferScale = 1,
-        bufferOffsetX = 0,
-    bufferOffsetY = 0;
+        FPS = 0,
+        frames = 0,
+        acumDelta = 0;
 
     // Scene management
     var currentScene = 0,
@@ -191,28 +192,12 @@
         body.push(new Rectangle(40, 40, 10, 10));
     }
 
-    function canPlayOgg() {
-        var aud = new Audio();
-        if (aud.canPlayType('audio/ogg').replace(/no/, '')) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     // Draw in canvas
     gameScene.paint = function (ctx) {
         var i = 0,
             l = 0;
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, buffer.width, buffer.height);
-
-        //Draw body[0]
-        ctx.fillStyle = '#0f0';
-        for (i = 0, l = body.length; i < l; i += 1) {
-            //body[i].fill(ctx);
-            body[i].drawImage(ctx,iBody);
-        }
 
         // Draw food
         ctx.fillStyle = '#f00';
@@ -222,8 +207,12 @@
         if((Date.now() > fruitTimer)){
             fruit.drawImage(ctx,iFruit);
         }
-        
-
+        //Draw body[0]
+        ctx.fillStyle = '#0f0';
+        for (i = 0, l = body.length; i < l; i += 1) {
+            //body[i].fill(ctx);
+            body[i].drawImage(ctx,iBody);
+        }
         // Draw walls
         ctx.fillStyle = '#999';
         for (i = 0, l = wall.length; i < l; i += 1) {
@@ -322,6 +311,7 @@
             // Fruit Intersects 
             if ((body[0].intersects(fruit)) && (Date.now() > fruitTimer)) {
                 score += 1;
+                postScore(score);
                 fruit.x = random(buffer.width / 10 - 1) * 10;
                 fruit.y = random(buffer.height / 10 - 1) * 10;
                 aEat.play();
@@ -350,6 +340,15 @@
         if (lastPress === KEY_ENTER) {
             pause = !pause;
             lastPress = null;
+        }
+    }
+
+    function canPlayOgg() {
+        var aud = new Audio();
+        if (aud.canPlayType('audio/ogg').replace(/no/, '')) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -479,5 +478,20 @@
     // Aux funtion for random number generation
     function random(max) {
         return Math.floor(Math.random() * max);
+    }
+    function postScore(actualScore){
+        fetch(`https://jsonplaceholder.typicode.com/users/${userId}/posts?${actualScore}`, {
+        method: 'POST',
+        body: JSON.stringify({
+            score: actualScore,
+            userId: userId,
+        }),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8',
+        },
+        })
+        .then((response) => response.json())
+        .then((json) => {console.log(json); console.log("Score sent successfully");})
+        .catch((error) => {console.log(error);console.log("Error trying to send the score");})
     }
 }(window));
