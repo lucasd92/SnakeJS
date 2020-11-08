@@ -31,6 +31,7 @@
 
     // images
     var iBody = new Image();
+    var iWall = new Image();
     var iFood = new Image();
     var iFruit = new Image();
 
@@ -216,7 +217,7 @@
         // Draw walls
         ctx.fillStyle = '#999';
         for (i = 0, l = wall.length; i < l; i += 1) {
-            wall[i].fill(ctx);
+            wall[i].drawImage(ctx,iWall);
         }
 
         // White
@@ -423,6 +424,7 @@
 
         // Load assets
         iBody.src = 'assets/body.png';
+        iWall.src = 'assets/wall.png';
         iFood.src = 'assets/fruit.png';
         iFruit.src = 'assets/fruit2.png';
 
