@@ -37,8 +37,15 @@
     acumDelta = 0;
 
     var bufferScale = 1,
-    bufferOffsetX = 0,
+        bufferOffsetX = 0,
     bufferOffsetY = 0;
+
+    // Scene management
+    var currentScene = 0,
+        scenes = [];
+
+    var mainScene = null,
+        gameScene = null;
 
 
     // definition, maybe const?
@@ -89,8 +96,51 @@
             }
         }
     };
+
+    function Scene() {
+        this.id = scenes.length;
+        scenes.push(this);
+    }
+
+    Scene.prototype = {
+        constructor: Scene,
+        load: function () {},
+        paint: function (ctx) {},
+        act: function () {}
+    };
+
+    function loadScene(scene) {
+        currentScene = scene.id;
+        scenes[currentScene].load();
+    }
+
+
+    
+    // Main Scene
+    mainScene = new Scene();
+    mainScene.paint = function (ctx) {
+        // Clean canvas
+        ctx.fillStyle = '#030';
+        ctx.fillRect(0, 0, buffer.width, buffer.height);
+        // Draw title
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText('SNAKE', 150, 60);
+        ctx.fillText('Press Enter', 150, 90);
+    };
+    mainScene.act = function () {
+        // Load next scene
+        if (lastPress === KEY_ENTER) {
+            loadScene(gameScene);
+            lastPress = null;
+        }
+    };
+    
+    // Game Scene
+    gameScene = new Scene();
+
     // reset values to restart game
-    function reset() {
+    gameScene.load = function () {
         score = 0;
         dir = 1;
         body[0].x = 40;
@@ -112,7 +162,7 @@
     }
 
     // Draw in canvas
-    function paint(ctx) {
+    gameScene.paint = function (ctx) {
         var i = 0,
             l = 0;
         ctx.fillStyle = '#000';
@@ -154,13 +204,13 @@
         }
     } 
     //Execute actions
-    function act(){
+    gameScene.act = function (){
         var i = 0,
             l = 0;
         if(!pause){
             // GameOver Reset
             if (gameover) {
-                reset();
+                loadScene(mainScene);
             }
             // Change Direction
             if (lastPress === KEY_UP && dir !== 2) {
@@ -290,7 +340,7 @@
             aEat.src = 'assets/chomp.m4a';
             aDie.src = 'assets/dies.m4a';
         }
-        resize();
+         resize();
         run();
         repaint();
 
@@ -299,7 +349,10 @@
     function repaint() {
         window.requestAnimationFrame(repaint);
         // buffer swap
-        paint(bufferCtx);
+        //paint(bufferCtx);        
+        if (scenes.length) {
+            scenes[currentScene].paint(bufferCtx);
+        }
         ctx.fillStyle = '#000';
         ctx.imageSmoothingEnabled = false;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -308,8 +361,9 @@
     }
     function run() {
         setTimeout(run, 50);
-        act();
-        //paint(ctx);
+        if (scenes.length) {
+            scenes[currentScene].act();
+        }
         
         // get time for statics calculation
         var now = Date.now(),
